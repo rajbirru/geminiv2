@@ -123,22 +123,22 @@ with tab1:
     default_user_input = "Build me a portfolio of stocks, ETFs, Bonds and funds"
     user_input = st.text_input("Type your message here...", value=default_user_input, key="user_input")
 
-if st.button("Submit"):
-    # ...
-    portfolio_items = extract_portfolio_items(llm_response)
+    if st.button("Submit"):
+        # ...
+        portfolio_items = extract_portfolio_items(llm_response)
+
+        # Display the portfolio chart
+        if portfolio_items:
+            fig = display_portfolio_chart(portfolio_items)
+            st.plotly_chart(fig)
+        else:
+            st.warning("No portfolio items found in the recommendation.")
 
     # Display the portfolio chart
     if portfolio_items:
-        fig = display_portfolio_chart(portfolio_items)
-        st.plotly_chart(fig)
+        display_portfolio_chart(portfolio_items)
     else:
         st.warning("No portfolio items found in the recommendation.")
-
-# Display the portfolio chart
-if portfolio_items:
-    display_portfolio_chart(portfolio_items)
-else:
-    st.warning("No portfolio items found in the recommendation.")
 
 with tab2:
     # Get market sentiment from the LLM
