@@ -123,20 +123,33 @@ with tab1:
     default_user_input = "Build me a portfolio of stocks, ETFs, Bonds and funds"
     user_input = st.text_input("Type your message here...", value=default_user_input, key="user_input")
 
-    if st.button("Submit"):
-        # ...
-        portfolio_items = extract_portfolio_items(llm_response)
+if st.button("Submit"):
+    # Append user message to chat history
+    st.session_state.messages.append({'role': 'user', 'content': user_input})
 
-        # Display the portfolio chart
-        if portfolio_items:
-            fig = display_portfolio_chart(portfolio_items)
-            st.plotly_chart(fig)
-        else:
-            st.warning("No portfolio items found in the recommendation.")
+    # Initialize llm_response
+    llm_response = ""
+
+    # Send the user input along with the user profile and market sentiment to the LLM and fetch the response
+    user_profile_summary = st.session_state.user_profile.get_profile_summary()
+    system_context = get_system_context()
+    try:
+        response = st.session_state.gemini_chat.send_message(f"{system_context}\n\nUser Profile:\n{user_profile_summary}\n\nUser Message:\n{user_input}")
+        llm_response = ''.join([chunk.text for chunk in response])
+    except Exception as e:
+        st.error(f"Error getting LLM response: {str(e)}")
+        llm_response = "Error generating portfolio recommendation."
+
+    # Process the LLM response and update the chat history
+    st.session_state.messages.append({'role': 'assistant', 'content': llm_response})
+
+    # Extract the selected stocks, ETFs, funds, and bonds from the LLM response
+    portfolio_items = extract_portfolio_items(llm_response)
 
     # Display the portfolio chart
     if portfolio_items:
-        display_portfolio_chart(portfolio_items)
+        fig = display_portfolio_chart(portfolio_items)
+        st.plotly_chart(fig)
     else:
         st.warning("No portfolio items found in the recommendation.")
 
