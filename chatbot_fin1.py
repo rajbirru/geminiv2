@@ -5,6 +5,7 @@ from user_profile import UserProfile
 import matplotlib.pyplot as plt
 import plotly.express as px
 import re
+from portfolio_utils import extract_portfolio_items, display_portfolio_chart
 
 # Set page title and favicon
 st.set_page_config(page_title="FinanceGPT", page_icon=":money_with_wings:")
@@ -96,6 +97,9 @@ with tab1:
     st.markdown('<div class="title">FinanceGPT</div>', unsafe_allow_html=True)
     st.markdown('<div class="subtitle">Your Personal Finance Assistant</div>', unsafe_allow_html=True)
 
+    # Initialize portfolio_items
+    portfolio_items = {}
+
     # User profile input
     with st.expander("Build Your Profile"):
         investment_goals = st.text_input("Enter your investment goals", value="Retirement")
@@ -119,39 +123,22 @@ with tab1:
     default_user_input = "Build me a portfolio of stocks, ETFs, Bonds and funds"
     user_input = st.text_input("Type your message here...", value=default_user_input, key="user_input")
 
-    if st.button("Submit"):
-        # Append user message to chat history
-        st.session_state.messages.append({'role': 'user', 'content': user_input})
-
-        # Send the user input along with the user profile and market sentiment to the LLM and fetch the response
-        user_profile_summary = st.session_state.user_profile.get_profile_summary()
-        system_context = get_system_context()
-        try:
-            response = st.session_state.gemini_chat.send_message(f"{system_context}\n\nUser Profile:\n{user_profile_summary}\n\nUser Message:\n{user_input}")
-            llm_response = ''.join([chunk.text for chunk in response])
-        except Exception as e:
-            st.error(f"Error getting LLM response: {str(e)}")
-            llm_response = "Error generating portfolio recommendation."
-
-    # Process the LLM response and update the chat history
-    st.session_state.messages.append({'role': 'assistant', 'content': llm_response})
-
-    # **Removed the following lines that were causing the error**
-    # portfolio_items = extract_portfolio_items(llm_response)
-    # if portfolio_items:
-    #   display_portfolio_chart(portfolio_items)
-    # else:
-    #   st.warning("No portfolio items found in the recommendation.")
-
-
-    # Extract the selected stocks, ETFs, funds, and bonds from the LLM response
-    # portfolio_items = extract_portfolio_items(llm_response)
+if st.button("Submit"):
+    # ...
+    portfolio_items = extract_portfolio_items(llm_response)
 
     # Display the portfolio chart
     if portfolio_items:
-        display_portfolio_chart(portfolio_items)
+        fig = display_portfolio_chart(portfolio_items)
+        st.plotly_chart(fig)
     else:
         st.warning("No portfolio items found in the recommendation.")
+
+# Display the portfolio chart
+if portfolio_items:
+    display_portfolio_chart(portfolio_items)
+else:
+    st.warning("No portfolio items found in the recommendation.")
 
 with tab2:
     # Get market sentiment from the LLM
